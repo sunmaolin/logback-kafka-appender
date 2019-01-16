@@ -9,7 +9,7 @@
         <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.HostNameKeyingStrategy" />
         <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
 
-        <producerConfig>bootstrap.servers=localhost:9092</producerConfig>
+        <producerConfig>bootstrap.servers=192.168.25.77:9092</producerConfig>
     </appender>
     <logger name="LogbackIntegrationIT" additivity="false" level="info">
         <appender-ref ref="KafkaAppender"/>
