@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.danielwegener</groupId>
     <artifactId>logback-kafka-appender</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0-ps-0.1-SNAPSHOT</version>
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -327,5 +327,20 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>Snapshots</name>
+            <url>http://192.168.1.106:8081/nexus/content/repositories/snapshots/</url>
+            <uniqueVersion>true</uniqueVersion>
+        </snapshotRepository>
+        <repository>
+            <id>support</id>
+            <url>http://192.168.1.106:8081/nexus/content/repositories/support/</url>
+            <uniqueVersion>false</uniqueVersion>
+        </repository>
+        <downloadUrl>http://192.168.1.106:8081/nexus/content/groups/public</downloadUrl>
+    </distributionManagement>
 </project>
 
