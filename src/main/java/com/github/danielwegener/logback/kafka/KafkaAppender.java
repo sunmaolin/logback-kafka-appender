@@ -21,12 +21,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
 
     /**
-     * Kafka clients uses this prefix for its slf4j logging.
-     * This appender defers appends of any Kafka logs since it could cause harmful infinite recursion/self feeding effects.
+     * Kafka clients uses this prefix for its slf4j logging. This appender defers appends of any Kafka logs since it
+     * could cause harmful infinite recursion/self feeding effects.
      */
     private static final String KAFKA_LOGGER_PREFIX = KafkaProducer.class.getPackage().getName().replaceFirst("\\.producer$", "");
-
-    private LazyProducer lazyProducer = null;
     private final AppenderAttachableImpl<E> aai = new AppenderAttachableImpl<E>();
     private final ConcurrentLinkedQueue<E> queue = new ConcurrentLinkedQueue<E>();
     private final FailedDeliveryCallback<E> failedDeliveryCallback = new FailedDeliveryCallback<E>() {
@@ -35,6 +33,7 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
             aai.appendLoopOnAppenders(evt);
         }
     };
+    public LazyProducer lazyProducer = null;
 
     public KafkaAppender() {
         // setting these as config values sidesteps an unnecessary warning (minor bug in KafkaProducer)
@@ -45,7 +44,7 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
     @Override
     public void doAppend(E e) {
         ensureDeferredAppends();
-        if (e instanceof ILoggingEvent && ((ILoggingEvent)e).getLoggerName().startsWith(KAFKA_LOGGER_PREFIX)) {
+        if (e instanceof ILoggingEvent && ((ILoggingEvent) e).getLoggerName().startsWith(KAFKA_LOGGER_PREFIX)) {
             deferAppend(e);
         } else {
             super.doAppend(e);
@@ -55,7 +54,9 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
     @Override
     public void start() {
         // only error free appenders should be activated
-        if (!checkPrerequisites()) return;
+        if (!checkPrerequisites()) {
+            return;
+        }
 
         if (partition != null && partition < 0) {
             partition = null;
@@ -64,6 +65,11 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
         lazyProducer = new LazyProducer();
 
         super.start();
+    }
+
+    public void reset() {
+        lazyProducer.get().close();
+        lazyProducer = new LazyProducer();
     }
 
     @Override
@@ -161,16 +167,16 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
      *
      * @see <a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.4/org/apache/commons/lang3/concurrent/LazyInitializer.html">LazyInitializer</a>
      */
-    private class LazyProducer {
+    public class LazyProducer {
 
         private volatile Producer<byte[], byte[]> producer;
 
         public Producer<byte[], byte[]> get() {
             Producer<byte[], byte[]> result = this.producer;
             if (result == null) {
-                synchronized(this) {
+                synchronized (this) {
                     result = this.producer;
-                    if(result == null) {
+                    if (result == null) {
                         this.producer = result = this.initialize();
                     }
                 }
@@ -189,7 +195,9 @@ public class KafkaAppender<E> extends KafkaAppenderConfig<E> {
             return producer;
         }
 
-        public boolean isInitialized() { return producer != null; }
+        public boolean isInitialized() {
+            return producer != null;
+        }
     }
 
 }
