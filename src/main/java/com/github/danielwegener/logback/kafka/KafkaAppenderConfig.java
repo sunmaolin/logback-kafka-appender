@@ -51,12 +51,14 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
                 List<String> childs = zkClient.getChildren(ZnodeWatcher.KAFKA_NODE, null);
                 String kafkaNodes = ZnodeWatcher.getKafkaNode(zkClient, childs);
                 producerConfig.put(BOOTSTRAP_SERVERS_CONFIG, kafkaNodes);
-                producerConfig.remove(ZOOKEEPER_SERVERS);
+                //producerConfig.remove(ZOOKEEPER_SERVERS);
                 System.out.println("添加kafka节点:" + kafkaNodes);
                 Thread watcherThread = new Thread(() -> {
                     try {
                         zkClient.getChildren(ZnodeWatcher.KAFKA_NODE, znodeWatcher);
-                        this.wait();
+                        synchronized (this) {
+                            wait();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
