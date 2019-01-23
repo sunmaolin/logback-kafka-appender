@@ -50,22 +50,27 @@ public abstract class KafkaAppenderConfig<E> extends UnsynchronizedAppenderBase<
                 ZnodeWatcher znodeWatcher = new ZnodeWatcher((KafkaAppender) this, zkClient);
                 List<String> childs = zkClient.getChildren(ZnodeWatcher.KAFKA_NODE, null);
                 String kafkaNodes = ZnodeWatcher.getKafkaNode(zkClient, childs);
-                producerConfig.put(BOOTSTRAP_SERVERS_CONFIG, kafkaNodes);
-                //producerConfig.remove(ZOOKEEPER_SERVERS);
-                System.out.println("添加kafka节点:" + kafkaNodes);
-                Thread watcherThread = new Thread(() -> {
-                    try {
-                        zkClient.getChildren(ZnodeWatcher.KAFKA_NODE, znodeWatcher);
-                        synchronized (this) {
-                            wait();
+                if (null == kafkaNodes || kafkaNodes.trim().equals("kafkaNodes") || null == childs || childs.isEmpty()) {
+                    addError("\"zookeeper.servers\" is error for the appender named [\"" + name + "\"].");
+                    errorFree = false;
+                } else {
+                    producerConfig.put(BOOTSTRAP_SERVERS_CONFIG, kafkaNodes);
+                    //producerConfig.remove(ZOOKEEPER_SERVERS);
+                    System.out.println("添加kafka节点:" + kafkaNodes);
+                    Thread watcherThread = new Thread(() -> {
+                        try {
+                            zkClient.getChildren(ZnodeWatcher.KAFKA_NODE, znodeWatcher);
+                            synchronized (this) {
+                                wait();
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-                //希望你永远沉睡保护着监听程序
-                watcherThread.setDaemon(true);
-                watcherThread.start();
+                    });
+                    //希望你永远沉睡保护着监听程序
+                    watcherThread.setDaemon(true);
+                    watcherThread.start();
+                }
             }
         } catch (Exception e) {
             addError("\"zookeeper.servers\" is error for the appender named [\"" + name + "\"].");
